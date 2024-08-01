@@ -1,0 +1,6 @@
+peewee~=3.17.6
+beautifulsoup4~=4.12.3
+loguru~=0.7.2
+tls-client~=1.0.1
+typing-extensions~=4.12.2
+PyMySQL~=1.1.1
