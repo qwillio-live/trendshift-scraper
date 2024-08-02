@@ -4,3 +4,4 @@ loguru~=0.7.2
 tls-client~=1.0.1
 typing-extensions~=4.12.2
 PyMySQL~=1.1.1
+fastapi~=0.111.0

@@ -4,7 +4,7 @@
 rm -f /etc/cron.d/trendshift-cron
 
 # Generate the cron job
-echo "$CRONTIME DBHOST=$DBHOST DBPORT=$DBPORT DBUSER=$DBUSER DBPASS=$DBPASS DELAY=$DELAY MAXID=$MAXID MAXERRORNUMBER=$MAXERRORNUMBER LASTRUNCHECK=$LASTRUNCHECK PROXY=$PROXY NOTIFICATIONURL=$NOTIFICATIONURL /usr/local/bin/python /app/main.py >> /var/log/trendshift.log 2>&1" > /etc/cron.d/trendshift-cron
+echo "$CRONTIME DBHOST=$DBHOST DBPORT=$DBPORT DBUSER=$DBUSER DBPASS=$DBPASS DELAY=$DELAY MAXID=$MAXID MAXERRORNUMBER=$MAXERRORNUMBER LASTRUNCHECK=$LASTRUNCHECK PROXY=$PROXY NOTIFICATIONURL=$NOTIFICATIONURL /usr/local/bin/python /app/trendshift.py >> /var/log/trendshift.log 2>&1" > /etc/cron.d/trendshift-cron
 
 # Set permissions
 chmod 0644 /etc/cron.d/trendshift-cron
