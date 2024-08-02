@@ -2,7 +2,8 @@ FROM python:3.12-slim
 
 # Install cron
 RUN apt-get update && apt-get install -y cron
-
+# Install procps to get the ps command
+RUN apt-get install -y procps
 # Set the working directory
 WORKDIR /app
 
