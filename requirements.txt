@@ -6,3 +6,4 @@ typing-extensions~=4.12.2
 PyMySQL~=1.1.1
 fastapi~=0.111.0
 psutil~=6.0.0
+pydantic~=2.1.1

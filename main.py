@@ -2,8 +2,14 @@ import os
 import subprocess
 import psutil  # Use psutil to check for running processes
 import fastapi
+from pydantic import BaseModel
 
-app = fastapi.FastAPI(docs_url=None, redoc_url=None)
+
+class PasswordModel(BaseModel):
+    password: str
+
+
+app = fastapi.FastAPI(docs_url="/", redoc_url=None)
 
 # Path to the script you want to run
 script_path = "/app/trendshift.py"
@@ -17,10 +23,10 @@ def is_script_running(script_name: str):
     return None
 
 
-@app.get("/run")
-def run(password: str):
+@app.post("/run")
+def run(password_obj: PasswordModel):
     # Check password
-    if password != os.environ.get("RunPassword", "Test@1sa"):
+    if password_obj.password != os.environ.get("RunPassword", "Test@1sa"):
         return {"status": "Invalid Password"}
 
     # Check if the script is already running
@@ -32,9 +38,9 @@ def run(password: str):
     return {"status": "OK"}
 
 
-@app.get("/stop")
-def stop(password: str):
-    if password != os.environ.get("RunPassword", "Test@1sa"):
+@app.post("/stop")
+def stop(password_obj: PasswordModel):
+    if password_obj.password != os.environ.get("RunPassword", "Test@1sa"):
         return {"status": "Invalid Password"}
 
     proc = is_script_running(script_path)
@@ -44,4 +50,3 @@ def stop(password: str):
         return {"status": "Script stopped"}
 
     return {"status": "Script is not running"}
-
