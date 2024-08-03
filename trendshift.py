@@ -101,7 +101,8 @@ def convert_to_int(temp_str):
 def send_notification(message: str):
     if NOTIFICATION_URL and NOTIFICATION_URL != "None":
         try:
-            session.post(NOTIFICATION_URL, data=message, headers={"Content-Type": "text/plain"})
+            notification=session.post(NOTIFICATION_URL, data=message, headers={"Content-Type": "text/plain"})
+            logger.info(f"Notification Sent: {notification.text}")
         except Exception as e:
             logger.error(f"Error in sending notification: {e}")
 
