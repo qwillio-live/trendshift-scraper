@@ -207,6 +207,7 @@ if last_checked_id_object:
 
 error_count = 0
 no_language, _ = Language.get_or_create(name="No Language")
+last_id = 0
 for i in range(start_id, MAX_ID + 1):
     if error_count >= MAX_RETRY:
         logger.error(f"MAX ERROR COUNT REACHED: {error_count}")
@@ -311,9 +312,9 @@ for i in range(start_id, MAX_ID + 1):
         logger.error(f"Error in getting data: {err}")
         continue
     finally:
+        last_id = i
         last_checked_id_save(i)
         time.sleep(DELAY_IN_SECONDS)
 
-
 if error_count < MAX_RETRY:
-    send_notification("Trendshift Scraper Completed at Last ID: {i}")
+    send_notification(f"Trendshift Scraper Completed at Last ID: {last_id}")
