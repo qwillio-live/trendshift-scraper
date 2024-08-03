@@ -9,6 +9,10 @@ class PasswordModel(BaseModel):
     password: str
 
 
+class LinesModel(BaseModel):
+    lines: int = -1
+
+
 app = fastapi.FastAPI(docs_url="/", redoc_url=None)
 
 # Path to the script you want to run
@@ -50,3 +54,16 @@ def stop(password_obj: PasswordModel):
         return {"status": "Script stopped"}
 
     return {"status": "Script is not running"}
+
+
+@app.post("logs")
+def get_logs(lines_obj: LinesModel):
+    if lines_obj.lines == -1:
+        with open("/app/logs/logs.txt", "r") as f:
+            logs = f.read()
+    elif lines_obj.lines <= 0:
+        return {"status": "Invalid number of lines"}
+    else:
+        # Read the last `lines` lines from the log file
+        logs = subprocess.check_output(["tail", f"-{lines_obj.lines}", "/app/logs/logs.txt"], text=True)
+    return fastapi.responses.PlainTextResponse(logs)

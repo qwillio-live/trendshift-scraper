@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y cron
 RUN apt-get install -y procps
 # Set the working directory
 WORKDIR /app
-
+RUN mkdir logs
 # Install Python dependencies
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
@@ -15,6 +15,7 @@ RUN pip install -r requirements.txt
 COPY db.py db.py
 COPY main.py main.py
 COPY trendshift.py trendshift.py
+
 
 # Copy the script to create the cron job
 COPY create-cron.sh /create-cron.sh

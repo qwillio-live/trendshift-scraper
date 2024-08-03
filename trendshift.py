@@ -18,15 +18,23 @@ LAST_RUN_CHECK = int(os.getenv('LASTRUNCHECK', 48))
 PROXY_URL = os.getenv('PROXY', None)
 NOTIFICATION_URL = os.getenv('NOTIFICATIONURL', None)
 
+#current path from os
+current_script_path = os.path.dirname(os.path.realpath(__file__))
+logs_path = os.path.join(current_script_path, 'logs')
+if not os.path.exists(logs_path):
+    os.makedirs(logs_path)
+log_file_path = os.path.join(logs_path, 'logs.txt')
+
+
 # Logger Configuration
 logger.remove()
-# logger.add(
-#     "logs.txt",
-#     format="{time:YYYY-MM-DD at HH:mm:ss}\t{level}\t{message}",
-#     backtrace=False,
-#     diagnose=False,
-#     rotation="1 week",
-# )
+logger.add(
+    log_file_path,
+    format="{time:YYYY-MM-DD at HH:mm:ss}\t{level}\t{message}",
+    backtrace=False,
+    diagnose=False,
+    rotation="14 days",
+)
 logger.add(sys.stdout, backtrace=False, diagnose=False, colorize=True, format="<level>{message}</level>")
 
 # Database Connection
