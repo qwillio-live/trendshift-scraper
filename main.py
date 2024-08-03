@@ -56,7 +56,7 @@ def stop(password_obj: PasswordModel):
     return {"status": "Script is not running"}
 
 
-@app.post("logs")
+@app.post("/logs")
 def get_logs(lines_obj: LinesModel):
     if lines_obj.lines == -1:
         with open("/app/logs/logs.txt", "r") as f:
