@@ -18,13 +18,12 @@ LAST_RUN_CHECK = int(os.getenv('LASTRUNCHECK', 48))
 PROXY_URL = os.getenv('PROXY', None)
 NOTIFICATION_URL = os.getenv('NOTIFICATIONURL', None)
 
-#current path from os
+# current path from os
 current_script_path = os.path.dirname(os.path.realpath(__file__))
 logs_path = os.path.join(current_script_path, 'logs')
 if not os.path.exists(logs_path):
     os.makedirs(logs_path)
 log_file_path = os.path.join(logs_path, 'logs.txt')
-
 
 # Logger Configuration
 logger.remove()
@@ -46,7 +45,7 @@ session = tls_client.Session(
     random_tls_extension_order=True,
 )
 
-#https://api.ipify.org
+# https://api.ipify.org
 # logger.success(session.get('https://api.ipify.org').text)
 
 useragents = [
@@ -109,7 +108,7 @@ def convert_to_int(temp_str):
 def send_notification(message: str):
     if NOTIFICATION_URL and NOTIFICATION_URL != "None":
         try:
-            notification=session.post(NOTIFICATION_URL, data=message, headers={"Content-Type": "text/plain"})
+            notification = session.post(NOTIFICATION_URL, data=message, headers={"Content-Type": "text/plain"})
             logger.info(f"Notification Sent: {notification.text}")
         except Exception as e:
             logger.error(f"Error in sending notification: {e}")
@@ -211,11 +210,12 @@ no_language, _ = Language.get_or_create(name="No Language")
 for i in range(start_id, MAX_ID + 1):
     if error_count >= MAX_RETRY:
         logger.error(f"MAX ERROR COUNT REACHED: {error_count}")
-        send_notification(f"MAX ERROR COUNT REACHED: {error_count}, Stopping the Trendshift Scraper.")
+        send_notification(f"MAX ERROR COUNT REACHED: {error_count}, Stopping the Trendshift Scraper at ID: {i}")
         break
     logger.info(f"ID: {i}")
     repository = Repository.select().where(Repository.trendshift_id == i).first()
-    if repository and repository.updated_at > (datetime.now() - timedelta(hours=LAST_RUN_CHECK)) and repository.error == 0:
+    if repository and repository.updated_at > (
+            datetime.now() - timedelta(hours=LAST_RUN_CHECK)) and repository.error == 0:
         logger.info(f"Skipping Cause of Last Run Check: {repository.updated_at}")
         continue
     try:
@@ -313,3 +313,7 @@ for i in range(start_id, MAX_ID + 1):
     finally:
         last_checked_id_save(i)
         time.sleep(DELAY_IN_SECONDS)
+
+
+if error_count < MAX_RETRY:
+    send_notification("Trendshift Scraper Completed at Last ID: {i}")
