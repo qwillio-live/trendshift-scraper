@@ -227,6 +227,7 @@ for i in range(start_id, MAX_ID + 1):
                     lang=no_language
                 )
             continue
+        error_count = 0
         language, _ = Language.get_or_create(name=data['language'])
         if repository:
             repository.name = data['name']
@@ -297,6 +298,7 @@ for i in range(start_id, MAX_ID + 1):
                         lang_id=no_language
                     )
     except Exception as err:
+        error_count += 1
         logger.error(f"Error in getting data: {err}")
         continue
     finally:
