@@ -266,7 +266,7 @@ for i in range(start_id, MAX_ID + 1):
                             rank_date=date
                         )
                 else:
-                    ranking = Ranking.select().where(Ranking.repository == repository, Ranking.lang == language,
+                    ranking = Ranking.select().where(Ranking.repository == repository, Ranking.lang == no_language,
                                                      Ranking.rank_date == date).first()
                     if ranking:
                         ranking.rank = trend["rank"]

@@ -6,7 +6,7 @@ DB_PORT = int(os.getenv('DBPORT', 3306))
 DB_USER = os.getenv('DBUSER', 'root')
 DB_PASS = os.getenv('DBPASS', 'root')
 database = MySQLDatabase('trendshift',
-                         **{'charset': 'utf8', 'sql_mode': 'PIPES_AS_CONCAT', 'use_unicode': True, 'user': DB_USER,
+                         **{'charset': 'utf8mb4', 'sql_mode': 'PIPES_AS_CONCAT', 'use_unicode': True, 'user': DB_USER,
                             'password': DB_PASS, 'host': DB_HOST, 'port': DB_PORT})
 
 
