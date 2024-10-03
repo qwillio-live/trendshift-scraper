@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS `ranking` (
   `rank_date` date DEFAULT NULL,
   `rank` int(11) DEFAULT 0,
   `lang_id` int(11) DEFAULT 0,
+  `last_commit` datetime,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),

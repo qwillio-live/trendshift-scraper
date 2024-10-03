@@ -43,6 +43,7 @@ class Repository(BaseModel):
     trendshift_id = IntegerField(null=True, unique=True)
     updated_at = DateTimeField(constraints=[SQL('DEFAULT current_timestamp()')], null=True)
     website = CharField(null=True)
+    last_commit = DateTimeField(null=True)
 
     class Meta:
         table_name = 'repository'

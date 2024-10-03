@@ -17,6 +17,7 @@ MAX_RETRY = int(os.getenv('MAXERRORNUMBER', 5))
 LAST_RUN_CHECK = int(os.getenv('LASTRUNCHECK', 48))
 PROXY_URL = os.getenv('PROXY', None)
 NOTIFICATION_URL = os.getenv('NOTIFICATIONURL', None)
+GITHUB_TOKEN = os.getenv('GITHUB_TOKEN', None)
 
 # current path from os
 current_script_path = os.path.dirname(os.path.realpath(__file__))
@@ -114,6 +115,58 @@ def send_notification(message: str):
             logger.error(f"Error in sending notification: {e}")
 
 
+def get_starts_commit(github_link: str) -> dict | None:
+    try:
+        username = github_link.split("/")[-2]
+        repo = github_link.split("/")[-1]
+        query = f"""
+            {{
+                repository(owner: "{username}", name: "{repo}") {{
+                    stargazerCount
+                    defaultBranchRef {{
+                        target {{
+                            ... on Commit {{
+                                history(first: 1) {{
+                                    edges {{
+                                        node {{
+                                            committedDate
+                                            message
+                                            author {{
+                                                name
+                                            }}
+                                        }}
+                                    }}
+                                }}
+                            }}
+                        }}
+                    }}
+                }}
+            }}
+            """
+
+        headers = {
+            "Authorization": f"Bearer {GITHUB_TOKEN}",
+            "Content-Type": "application/json"
+        }
+
+        response = session.post("https://api.github.com/graphql", json={"query": query}, headers=headers)
+        if response.status_code != 200:
+            return None
+        response_json = response.json()
+        stars = response_json["data"]["repository"]["stargazerCount"]
+        last_commit = response_json["data"]["repository"]["defaultBranchRef"]["target"]["history"]["edges"][0]["node"][
+            "committedDate"]
+        last_commit = datetime.strptime(last_commit, '%Y-%m-%dT%H:%M:%SZ')
+        #2024-10-03 15:52:55
+        return {
+            "stars": stars,
+            "last_commit": last_commit.strftime('%Y-%m-%d %H:%M:%S')
+        }
+    except Exception as e:
+        logger.error(f"Error in getting starts and commit: {e}")
+        return None
+
+
 # Get data from Trendshift
 def get_data(trendshift_id: int) -> dict | None:
     url = f'https://trendshift.io/repositories/{trendshift_id}'
@@ -125,7 +178,7 @@ def get_data(trendshift_id: int) -> dict | None:
         response = session.get(url)
         if response.status_code != 200:
             return None
-        name, language_text, github_link, website_link, description, stars, forks = None, "No Language", None, None, None, 0, 0
+        name, language_text, github_link, website_link, description, forks = None, "No Language", None, None, None, 0
         trending = []
         soup = BeautifulSoup(response.text, 'html.parser')
         name_and_language_object = soup.find('div',
@@ -154,16 +207,16 @@ def get_data(trendshift_id: int) -> dict | None:
             if description == "":
                 description = None
 
-        star_path_object = soup.find('path', d=lambda x: x and x.startswith('M8 .25a.75.75 0 0 1 .6'))
-        if star_path_object:
-            svg_object = star_path_object.find_parent('svg')
-            if svg_object:
-                start_div_object = svg_object.find_parent('div')
-                if start_div_object:
-                    try:
-                        stars = convert_to_int(start_div_object.text.strip())
-                    except Exception as e:
-                        logger.error(f"Error in converting stars: {e}")
+        # star_path_object = soup.find('path', d=lambda x: x and x.startswith('M8 .25a.75.75 0 0 1 .6'))
+        # if star_path_object:
+        #     svg_object = star_path_object.find_parent('svg')
+        #     if svg_object:
+        #         start_div_object = svg_object.find_parent('div')
+        #         if start_div_object:
+        #             try:
+        #                 stars = convert_to_int(start_div_object.text.strip())
+        #             except Exception as e:
+        #                 logger.error(f"Error in converting stars: {e}")
 
         forks_path_object = soup.find('path', d=lambda x: x and x.startswith('M5 5.372v.878c0 .414.33'))
         if forks_path_object:
@@ -182,15 +235,23 @@ def get_data(trendshift_id: int) -> dict | None:
             trending_data = json.loads('{"trendings":[' + trending_data_match[0].replace('\\', '') + '}]}')
             trending = trending_data['trendings']
 
+        stars_commit_data = get_starts_commit(github_link)
+        if not stars_commit_data:
+            stars_commit_data = {
+                "stars": 0,
+                "last_commit": None
+            }
+
         return {
             "name": name,
             "language": language_text,
             "github_link": github_link,
             "website_link": website_link,
             "description": description,
-            "stars": stars,
+            "stars": stars_commit_data["stars"],
             "forks": forks,
-            "trending": trending
+            "trending": trending,
+            "last_commit": stars_commit_data["last_commit"],
         }
     except Exception as e:
         logger.error(f"Error in getting data: {e}")
@@ -247,6 +308,7 @@ for i in range(start_id, MAX_ID + 1):
             repository.stars = data['stars']
             repository.forks = data['forks']
             repository.lang = language
+            repository.last_commit = data['last_commit']
             repository.updated_at = datetime.now()
             repository.save()
 
@@ -289,6 +351,7 @@ for i in range(start_id, MAX_ID + 1):
                 forks=data['forks'],
                 lang=language,
                 trendshift_id=i,
+                last_commit=data['last_commit'],
                 error=0
             )
 
