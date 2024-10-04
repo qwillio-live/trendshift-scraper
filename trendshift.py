@@ -123,6 +123,16 @@ def get_starts_commit(github_link: str) -> dict | None:
             {{
                 repository(owner: "{username}", name: "{repo}") {{
                     stargazerCount
+                    createdAt
+                    repositoryTopics(first: 100, after: null) {{
+                        edges {{
+                            node {{
+                                topic {{
+                                    name
+                                }}
+                            }}
+                        }}
+                    }}
                     defaultBranchRef {{
                         target {{
                             ... on Commit {{
@@ -154,13 +164,20 @@ def get_starts_commit(github_link: str) -> dict | None:
             return None
         response_json = response.json()
         stars = response_json["data"]["repository"]["stargazerCount"]
+        created_at = response_json["data"]["repository"]["createdAt"]
+        created_at = datetime.strptime(created_at, '%Y-%m-%dT%H:%M:%SZ')
         last_commit = response_json["data"]["repository"]["defaultBranchRef"]["target"]["history"]["edges"][0]["node"][
             "committedDate"]
         last_commit = datetime.strptime(last_commit, '%Y-%m-%dT%H:%M:%SZ')
-        #2024-10-03 15:52:55
+        topics=[]
+        for topic in response_json["data"]["repository"]["repositoryTopics"]["edges"]:
+            topics.append(topic["node"]["topic"]["name"])
+
         return {
             "stars": stars,
-            "last_commit": last_commit.strftime('%Y-%m-%d %H:%M:%S')
+            "last_commit": last_commit.strftime('%Y-%m-%d %H:%M:%S'),
+            "created_at": created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            "topics": json.dumps(topics)
         }
     except Exception as e:
         logger.error(f"Error in getting starts and commit: {e}")
@@ -239,7 +256,9 @@ def get_data(trendshift_id: int) -> dict | None:
         if not stars_commit_data:
             stars_commit_data = {
                 "stars": 0,
-                "last_commit": None
+                "last_commit": None,
+                "created_at": None,
+                "topics": "[]"
             }
 
         return {
@@ -252,6 +271,8 @@ def get_data(trendshift_id: int) -> dict | None:
             "forks": forks,
             "trending": trending,
             "last_commit": stars_commit_data["last_commit"],
+            "started": stars_commit_data["created_at"],
+            "topics": stars_commit_data["topics"]
         }
     except Exception as e:
         logger.error(f"Error in getting data: {e}")
@@ -309,6 +330,8 @@ for i in range(start_id, MAX_ID + 1):
             repository.forks = data['forks']
             repository.lang = language
             repository.last_commit = data['last_commit']
+            repository.started = data['started']
+            repository.topics = data['topics']
             repository.updated_at = datetime.now()
             repository.save()
 
@@ -352,6 +375,8 @@ for i in range(start_id, MAX_ID + 1):
                 lang=language,
                 trendshift_id=i,
                 last_commit=data['last_commit'],
+                started=data['started'],
+                topics=data['topics'],
                 error=0
             )
 
