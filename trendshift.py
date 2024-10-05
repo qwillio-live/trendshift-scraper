@@ -12,6 +12,7 @@ from loguru import logger
 
 # Environment variables
 DELAY_IN_SECONDS = int(os.getenv('DELAY', 2))
+ERROR_DELAY_IN_SECONDS = int(os.getenv('ERRORDELAY', 60))
 MAX_ID = int(os.getenv('MAXID', 12000))
 MAX_RETRY = int(os.getenv('MAXERRORNUMBER', 5))
 LAST_RUN_CHECK = int(os.getenv('LASTRUNCHECK', 48))
@@ -296,12 +297,14 @@ for i in range(start_id, MAX_ID + 1):
         send_notification(f"MAX ERROR COUNT REACHED: {error_count}, Stopping the Trendshift Scraper at ID: {i}")
         break
     logger.info(f"ID: {i}")
-    repository = Repository.select().where(Repository.trendshift_id == i).first()
-    if repository and repository.updated_at > (
-            datetime.now() - timedelta(hours=LAST_RUN_CHECK)) and repository.error == 0:
-        logger.info(f"Skipping Cause of Last Run Check: {repository.updated_at}")
-        continue
+    is_error_delay = False
     try:
+        is_error_delay = False
+        repository = Repository.select().where(Repository.trendshift_id == i).first()
+        if repository and repository.updated_at > (
+                datetime.now() - timedelta(hours=LAST_RUN_CHECK)) and repository.error == 0:
+            logger.info(f"Skipping Cause of Last Run Check: {repository.updated_at}")
+            continue
         data = get_data(i)
         if not data:
             error_count += 1
@@ -398,11 +401,14 @@ for i in range(start_id, MAX_ID + 1):
     except Exception as err:
         error_count += 1
         logger.error(f"Error in getting data: {err}")
+        time.sleep(ERROR_DELAY_IN_SECONDS)
+        is_error_delay = True
         continue
     finally:
         last_id = i
         last_checked_id_save(i)
-        time.sleep(DELAY_IN_SECONDS)
+        if not is_error_delay:
+            time.sleep(DELAY_IN_SECONDS)
 
 if error_count < MAX_RETRY:
     send_notification(f"Trendshift Scraper Completed at Last ID: {last_id}")
