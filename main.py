@@ -10,6 +10,7 @@ class PasswordModel(BaseModel):
 
 
 class LinesModel(BaseModel):
+    log_file_name: str = "logs.txt"
     lines: int = -1
 
 
@@ -59,7 +60,7 @@ def stop(password_obj: PasswordModel):
 @app.post("/logs")
 def get_logs(lines_obj: LinesModel):
     if lines_obj.lines == -1:
-        with open("/app/logs/logs.txt", "r") as f:
+        with open(f"/app/logs/{lines_obj.log_file_name}") as f:
             logs = f.read()
     elif lines_obj.lines <= 0:
         return {"status": "Invalid number of lines"}
@@ -67,3 +68,8 @@ def get_logs(lines_obj: LinesModel):
         # Read the last `lines` lines from the log file
         logs = subprocess.check_output(["tail", f"-{lines_obj.lines}", "/app/logs/logs.txt"], text=True)
     return fastapi.responses.PlainTextResponse(logs)
+
+@app.post("/available-logs")
+def available_logs():
+    logs = os.listdir("/app/logs")
+    return {"logs": logs}
