@@ -62,7 +62,6 @@ useragents = [
 
 session.headers.update({
     "Accept-Language": "en-US,en;q=0.9",
-    "Accept-Encoding": "gzip, deflate, br, zstd",
     "Connection": "keep-alive",
     "Upgrade-Insecure-Requests": "1",
     "priority": "u=0, i",
