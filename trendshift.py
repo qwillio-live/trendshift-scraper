@@ -19,6 +19,12 @@ LAST_RUN_CHECK = int(os.getenv('LASTRUNCHECK', 48))
 PROXY_URL = os.getenv('PROXY', None)
 NOTIFICATION_URL = os.getenv('NOTIFICATIONURL', None)
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN', None)
+DISABLE_CRON = os.getenv('DISABLECRON', False)
+
+if DISABLE_CRON is True or str(DISABLE_CRON).lower() == "true":
+    logger.info("Cron is disabled")
+    #exit with success code
+    exit()
 
 # current path from os
 current_script_path = os.path.dirname(os.path.realpath(__file__))
@@ -162,6 +168,13 @@ def get_starts_commit(github_link: str) -> dict | None:
         response = session.post("https://api.github.com/graphql", json={"query": query}, headers=headers)
         if response.status_code != 200:
             return None
+        if "NOT_FOUND" in response.text:
+            return {
+                "stars": -1,
+                "last_commit": None,
+                "created_at": None,
+                "topics": "[]"
+            }
         response_json = response.json()
         stars = response_json["data"]["repository"]["stargazerCount"]
         created_at = response_json["data"]["repository"]["createdAt"]
