@@ -23,8 +23,13 @@ script_path = "/app/trendshift.py"
 # Function to check if the script is already running
 def is_script_running(script_name: str):
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
-        if script_name in proc.info['cmdline']:
-            return proc
+        try:
+            # Skip processes with empty or null cmdline
+            if proc.info['cmdline'] and script_name in proc.info['cmdline']:
+                return proc
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            # Ignore processes that no longer exist or can't be accessed
+            pass
     return None
 
 
