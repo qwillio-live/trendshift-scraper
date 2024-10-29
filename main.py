@@ -39,7 +39,7 @@ def run(password_obj: PasswordModel):
         return {"status": "Script is already running"}
 
     # Start the script if not already running
-    subprocess.Popen(["/usr/local/bin/python", script_path])
+    subprocess.Popen(["/usr/local/bin/python", script_path , "--trigger-manual"])
     return {"status": "OK"}
 
 

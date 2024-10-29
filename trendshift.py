@@ -21,10 +21,12 @@ NOTIFICATION_URL = os.getenv('NOTIFICATIONURL', None)
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN', None)
 DISABLE_CRON = os.getenv('DISABLECRON', False)
 
-if DISABLE_CRON is True or str(DISABLE_CRON).lower() == "true":
-    logger.info("Cron is disabled")
-    #exit with success code
-    exit()
+if "--trigger-manual" in sys.argv:
+    logger.info(f"Script Started Manually Ignoring Disable Cron Value: {DISABLE_CRON}")
+else:
+    if DISABLE_CRON is True or str(DISABLE_CRON).lower() == "true":
+        logger.info("Cron is disabled")
+        exit()
 
 # current path from os
 current_script_path = os.path.dirname(os.path.realpath(__file__))
