@@ -346,9 +346,9 @@ for i in range(start_id, MAX_ID + 1):
             repository.stars = data['stars'] if data['stars'] != 0 else repository.stars
             repository.forks = data['forks']
             repository.lang = language
-            repository.last_commit = data['last_commit']
-            repository.started = data['started']
-            repository.topics = data['topics']
+            repository.last_commit = data['last_commit'] if data['last_commit'] else repository.last_commit
+            repository.started = data['started'] if data['started'] else repository.started
+            repository.topics = data['topics'] if data['topics'] != "[]" else repository.topics
             repository.updated_at = datetime.now()
             repository.save()
 
