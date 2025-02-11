@@ -343,7 +343,7 @@ for i in range(start_id, MAX_ID + 1):
             repository.github = data['github_link']
             repository.website = data['website_link']
             repository.description = data['description']
-            repository.stars = data['stars']
+            repository.stars = data['stars'] if data['stars'] != 0 else repository.stars
             repository.forks = data['forks']
             repository.lang = language
             repository.last_commit = data['last_commit']
