@@ -46,6 +46,7 @@ class Repository(BaseModel):
     topics = CharField(null=True)
     last_commit = DateTimeField(null=True)
     started = DateTimeField(null=True)
+    full_description = TextField(null=True)
 
     class Meta:
         table_name = 'repository'

@@ -158,6 +158,11 @@ def get_starts_commit(github_link: str) -> dict | None:
                             }}
                         }}
                     }}
+                    object(expression: "HEAD:README.md") {{
+                        ... on Blob {{
+                            text
+                        }}
+                    }}
                 }}
             }}
             """
@@ -175,7 +180,8 @@ def get_starts_commit(github_link: str) -> dict | None:
                 "stars": -1,
                 "last_commit": None,
                 "created_at": None,
-                "topics": "[]"
+                "topics": "[]",
+                "full_description": None
             }
         response_json = response.json()
         stars = response_json["data"]["repository"]["stargazerCount"]
@@ -187,11 +193,21 @@ def get_starts_commit(github_link: str) -> dict | None:
         topics=[]
         for topic in response_json["data"]["repository"]["repositoryTopics"]["edges"]:
             topics.append(topic["node"]["topic"]["name"])
+        full_description=None
+        try:
+            full_description = description = response_json.get("data", {}).get("repository", {}).get("object", {}).get("text", None)
+            if full_description.strip() == "":
+                full_description = None
+        except Exception as e:
+            logger.error(f"Error in getting full description: {e}")
+            full_description = None
+
 
         return {
             "stars": stars,
             "last_commit": last_commit.strftime('%Y-%m-%d %H:%M:%S'),
             "created_at": created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            "full_description": full_description,
             "topics": json.dumps(topics)
         }
     except Exception as e:
@@ -273,7 +289,8 @@ def get_data(trendshift_id: int) -> dict | None:
                 "stars": 0,
                 "last_commit": None,
                 "created_at": None,
-                "topics": "[]"
+                "topics": "[]",
+                "full_description": None
             }
 
         return {
@@ -287,7 +304,8 @@ def get_data(trendshift_id: int) -> dict | None:
             "trending": trending,
             "last_commit": stars_commit_data["last_commit"],
             "started": stars_commit_data["created_at"],
-            "topics": stars_commit_data["topics"]
+            "topics": stars_commit_data["topics"],
+            "full_description": stars_commit_data["full_description"]
         }
     except Exception as e:
         logger.error(f"Error in getting data: {e}")
@@ -350,6 +368,7 @@ for i in range(start_id, MAX_ID + 1):
             repository.started = data['started'] if data['started'] else repository.started
             repository.topics = data['topics'] if data['topics'] != "[]" else repository.topics
             repository.updated_at = datetime.now()
+            repository.full_description = data['full_description'] if data['full_description'] else repository.full_description
             repository.save()
 
             for trend in data['trending']:
@@ -394,7 +413,8 @@ for i in range(start_id, MAX_ID + 1):
                 last_commit=data['last_commit'],
                 started=data['started'],
                 topics=data['topics'],
-                error=0
+                error=0,
+                full_description=data['full_description']
             )
 
             for trend in data['trending']:
